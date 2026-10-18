@@ -1,0 +1,19 @@
+{
+  "name": "chatgpt",
+  "publisher": "openai",
+  "displayName": "Codex navigation test fixture",
+  "version": "1.0.0",
+  "engines": { "vscode": "^1.80.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onStartupFinished", "onUri"],
+  "extensionKind": ["workspace"],
+  "contributes": {
+    "commands": [{ "command": "chatgpt.openSidebar", "title": "Open navigation fixture" }],
+    "viewsContainers": {
+      "secondarySidebar": [{ "id": "codexSecondaryViewContainer", "title": "Navigation fixture", "icon": "icon.svg" }]
+    },
+    "views": {
+      "codexSecondaryViewContainer": [{ "id": "chatgpt.sidebarSecondaryView", "type": "webview", "name": "Navigation fixture" }]
+    }
+  }
+}

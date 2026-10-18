@@ -1,0 +1,6 @@
+{
+  "displayName": "Worktabs Helper",
+  "description": "Desktop-only commands that VS Code Web lacks, and the way Worktabs brings Claude conversations to the front, for code-server running on this machine.",
+  "revealInExplorer": "Reveal in File Explorer",
+  "revealInFinder": "Reveal in Finder"
+}

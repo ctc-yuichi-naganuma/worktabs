@@ -1,0 +1,6 @@
+{
+  "displayName": "Worktabs Helper",
+  "description": "VS Code Web にないデスクトップ版のコマンドと、Worktabs から Claude の会話を前に出すための仕組みを足します（同じマシンで動く code-server 用）。",
+  "revealInExplorer": "エクスプローラーで表示する",
+  "revealInFinder": "Finder で表示する"
+}

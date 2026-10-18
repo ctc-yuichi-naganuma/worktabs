@@ -1,0 +1,1162 @@
+/* The colors of the VS Code theme in the tab in front, which the app sends (theme.js) and the
+   page sets on its root in place of these. Until then, those of VS Code's default themes, light
+   or dark as Windows is (data-scheme, set by sidebar.js), as the tabs' VS Code follows it too. */
+:root {
+  --bg: #f3f3f3;
+  --text: #333333;
+  --text-muted: #6f6f6f;
+  --border: #d4d4d4;
+  --row-hover: rgba(0, 0, 0, 0.06);
+  --row-active: #e4e6f1;
+  --active-text: var(--text);
+  --accent: #0066b8;
+  /* High contrast themes outline the row under the mouse and the selected one. */
+  --outline: transparent;
+  --section-bg: var(--bg);
+  --section-text: var(--text);
+  --icon: var(--text-muted);
+  --icon-hover: var(--row-hover);
+  --input-bg: #ffffff;
+  --input-text: var(--text);
+  --input-border: var(--border);
+  --placeholder: var(--text-muted);
+  --button-bg: var(--accent);
+  --button-text: #ffffff;
+  --button-hover: #0258a8;
+  --button-border: var(--button-bg);
+  --button2-bg: transparent;
+  --button2-text: var(--text);
+  --button2-hover: var(--row-hover);
+  --scrollbar: rgba(100, 100, 100, 0.4);
+  --color-scheme: light;
+}
+
+:root[data-scheme='dark'] {
+  --bg: #1f1f1f;
+  --text: #e6e6e6;
+  --text-muted: #9d9d9d;
+  --border: #2b2b2b;
+  --row-hover: rgba(255, 255, 255, 0.06);
+  --row-active: #37373d;
+  --accent: #3794ff;
+  --input-bg: #2a2a2a;
+  --button-hover: #026ec1;
+  --scrollbar: rgba(121, 121, 121, 0.4);
+  --color-scheme: dark;
+}
+
+/* The side bar's own colors, the same in every theme but for a set for light themes and one for
+   dark ones: the states, the WSL tag, pull requests and Claude's usage. As text (Waiting for
+   approval, the counts at the top, errors), each is 4.5:1 or more on the side bars of the usual
+   themes; as a mark, 3:1. */
+:root {
+  --idle: #6e6e6e;
+  --working: #0058b8;
+  --waiting: #a34700;
+  --done: #13793a;
+  --error: #b42318;
+  /* Orange, between the amber of Waiting for approval and the red it turns from 80%. */
+  --usage: #b95800;
+  /* The WSL tag: a hue no state uses. */
+  --wsl: #6d28d9;
+  --wsl-bg: #ede9fe;
+  /* Pull requests in GitHub's colors for their states, and checks that are still running. */
+  --pull-draft: #59636e;
+  --pull-open: #1a7f37;
+  --pull-merged: #8250df;
+  --pull-closed: #cf222e;
+  --checks-pending: #9a6700;
+  --working-glow: none;
+  --waiting-glow: none;
+  /* Text on the state colors, as in the badges at the top. */
+  --on-state: #ffffff;
+}
+
+:root[data-scheme='dark'] {
+  --on-state: #141414;
+  --idle: #8c8c8c;
+  --working: #4da6ff;
+  --waiting: #ffa53d;
+  --done: #3ccf7a;
+  --error: #ff6b6b;
+  --usage: #ee8a3a;
+  --wsl: #c4b5fd;
+  --wsl-bg: rgba(139, 92, 246, 0.28);
+  --pull-draft: #9198a1;
+  --pull-open: #3fb950;
+  --pull-merged: #ab7df8;
+  --pull-closed: #f85149;
+  --checks-pending: #d29922;
+  /* On a dark ground, the states that ask to be looked at glow a little. */
+  --working-glow: 0 0 6px rgba(77, 166, 255, 0.55);
+  --waiting-glow: 0 0 7px rgba(255, 165, 61, 0.6);
+}
+
+/* High contrast themes stay flat. */
+:root[data-contrast] {
+  --working-glow: none;
+  --waiting-glow: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+/* The color scheme is the body's, not the page's: a page in a dark scheme could be painted dark
+   where it should be transparent (see "Width"). */
+body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 "Segoe UI", "Yu Gothic UI", system-ui, sans-serif;
+  border-right: 1px solid var(--border);
+  user-select: none;
+  color-scheme: var(--color-scheme);
+}
+
+/* ---- Width ----
+
+   The right edge drags to change the side bar's width. While it is dragged, the page covers the
+   whole window (main.js) and draws the side bar at the width dragged to, which sidebar.js sets on
+   the body; beyond it, the page is transparent, over the tab. */
+
+.edge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: 4px;
+  cursor: col-resize;
+  transition: background-color 0.1s ease-out;
+}
+
+/* As VS Code shows its sashes: after a moment under the mouse, and at once while dragged. */
+.edge:hover {
+  background: var(--accent);
+  transition-delay: 0.3s;
+}
+
+:root.resizing .edge {
+  background: var(--accent);
+  transition: none;
+}
+
+/* A background image on the root, even a transparent one, keeps the body's background on the
+   body: it would otherwise paint the whole page. */
+:root.resizing {
+  background-image: linear-gradient(transparent, transparent);
+}
+
+:root.resizing,
+:root.resizing * {
+  cursor: col-resize !important;
+}
+
+/* The top: the name, the badges of the conversations waiting and working, and the buttons
+   (refresh the list, add, the rest). */
+header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 6px 0 12px;
+}
+
+.title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+#summary {
+  flex: none;
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* The count in a filled circle of its state's color, still: the dots in the tree already turn
+   and pulse. */
+.count-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 9px;
+  background: var(--waiting);
+  color: var(--on-state);
+  font: 600 11px/18px "Segoe UI", "Yu Gothic UI", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.count-badge.working {
+  background: var(--working);
+}
+
+.count-badge:hover {
+  filter: brightness(1.12);
+}
+
+.actions {
+  flex: none;
+  display: flex;
+  gap: 2px;
+}
+
+header .icon-button {
+  width: 26px;
+  height: 26px;
+}
+
+#refresh.spinning .icon {
+  animation: spin 0.9s linear infinite;
+}
+
+/* Text for screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Updates of code-server and the extensions, between the header and the filter. */
+
+.update {
+  flex: none;
+  margin: 0 8px 8px;
+  padding: 6px 6px 8px 10px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: var(--input-bg);
+  font-size: 12px;
+}
+
+.update.failed {
+  border-left-color: var(--error);
+}
+
+.update.done {
+  border-left-color: var(--done);
+}
+
+.update-head {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.update-title {
+  font-weight: 600;
+}
+
+.update .close {
+  visibility: visible;
+}
+
+/* A sweep for an update in progress. --phase (set by sidebar.js) keeps it in step across redraws. */
+.update-progress {
+  position: relative;
+  height: 2px;
+  margin: 6px 0 2px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: rgb(from var(--accent) r g b / 0.2);
+}
+
+.update-progress::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 35%;
+  background: var(--accent);
+  animation: progress-sweep 1400ms ease-in-out var(--phase, 0ms) infinite;
+}
+
+@keyframes progress-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(290%);
+  }
+}
+
+.update-items {
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.update-items li {
+  display: flex;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.update-items .detail {
+  margin-left: auto;
+}
+
+.update-detail {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.update-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.text-button {
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--button2-bg);
+  color: var(--button2-text);
+  font: inherit;
+}
+
+.text-button:hover {
+  background: var(--button2-hover);
+}
+
+.text-button.primary {
+  border-color: var(--button-border);
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.text-button.primary:hover {
+  background: var(--button-hover);
+}
+
+.filter {
+  flex: none;
+  padding: 0 8px 8px;
+}
+
+#filter {
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+  outline: none;
+}
+
+#filter::placeholder {
+  color: var(--placeholder);
+}
+
+#filter:focus {
+  border-color: var(--accent);
+}
+
+main {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 12px;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+/* The two sections sit a level above the repositories, headed like the views in VS Code's side
+   bar: a bar across it with a line above, in bold, with a chevron that folds the section (apart
+   from the repositories' triangles), that stays at the top while its section scrolls under it.
+   Folded, the open section's heading shows the most urgent state of its tabs. */
+.section-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: 0;
+  border-top: 1px solid var(--border);
+  background: var(--section-bg);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 26px;
+  padding: 0 8px 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--section-text);
+  font: inherit;
+  text-align: left;
+}
+
+.section-label:hover {
+  background: var(--row-hover);
+}
+
+.section-label .dot {
+  margin-left: auto;
+}
+
+.section-label .icon {
+  flex: none;
+  margin-right: 4px;
+  stroke-width: 1.5;
+}
+
+.section-label[aria-expanded='false'] .icon {
+  transform: rotate(-90deg);
+}
+
+.count {
+  margin-left: 6px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Space between a section's last row and the next heading. */
+main section {
+  padding-bottom: 6px;
+}
+
+/* The tree's indents: a row's mark sits under the name of the row it is under, so the rows under
+   a repository (or an owner) read as its own. A repository's row has no chevron: the indented
+   rows under it say that it is expanded, and the chevron's column would take width from every
+   name. */
+main {
+  --indent-repo: 8px;
+  /* A repository's icon (14px) and the row's gap. */
+  --indent-worktree: calc(var(--indent-repo) + 21px);
+  /* A worktree's dot (10px) and the row's gap, less the margin of a conversation's dot. */
+  --indent-conversation: calc(var(--indent-worktree) + 16px);
+  /* A conversation's dot and the row's gap: a subagent's dot lines up under its parent's icon. */
+  --indent-subagent: 17px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 26px;
+  padding: 0 6px 0 12px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.row:hover {
+  background: var(--row-hover);
+  outline: 1px dashed var(--outline);
+  outline-offset: -1px;
+}
+
+/* The theme's color for a selected row in a list without the focus, with the one for the row under
+   the mouse over it: on its own it is about as light as the latter in many themes, and the row of
+   the tab in front is to stand out from the one the mouse is on. The line at its left in the
+   accent made opaque: themes give it (focusBorder) translucent, and the lighter row under it
+   would wash it out. */
+.row.active {
+  background: linear-gradient(var(--row-hover), var(--row-hover)), var(--row-active);
+  color: var(--active-text);
+  box-shadow: inset 3px 0 0 rgb(from var(--accent) r g b / 1);
+  outline: 1px solid var(--outline);
+  outline-offset: -1px;
+}
+
+.row.attention {
+  box-shadow: inset 3px 0 0 var(--waiting);
+}
+
+.row.repo {
+  padding-left: var(--indent-repo);
+}
+
+.row.worktree {
+  padding-left: var(--indent-worktree);
+}
+
+.row.conversation {
+  min-height: 24px;
+  padding-left: calc(var(--indent-conversation) + var(--depth, 0) * var(--indent-subagent));
+  font-size: 12px;
+}
+
+/* The worktree a conversation has moved on to: kept in view while a long title is cut. */
+.moved {
+  flex: none;
+  max-width: 45%;
+}
+
+.row.conversation .dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 1px;
+}
+
+.row.conversation .agent-icon {
+  flex: none;
+  /* The size of the repository's provider mark (.icon.provider), so the rows read as one set. */
+  width: 14px;
+  height: 14px;
+  color: #000000;
+}
+
+/* Provider shapes stay visible beside the animated state badge. Each takes the colors its own
+   extension ships: the Codex knot in black or white, the Claude starburst in Claude's orange
+   (resources/claude-logo.svg), which reads on both themes. */
+:root[data-scheme='dark'] .row.conversation .agent-icon {
+  color: #ffffff;
+}
+
+.row.conversation .agent-icon.claude,
+:root[data-scheme='dark'] .row.conversation .agent-icon.claude {
+  color: #d97757;
+}
+
+.row.empty {
+  padding-left: var(--indent-worktree);
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.row.removing {
+  opacity: 0.55;
+}
+
+/* A repository not cloned, under its owner's row: its GitHub logo sits where a worktree's dot
+   does. While it is cloned, that says so where its button was. */
+.row.uncloned {
+  padding-left: var(--indent-worktree);
+}
+
+.row.uncloned > .state {
+  margin-left: auto;
+}
+
+/* How many repositories an owner has that are not cloned, at the right end of its row. */
+.owner-count {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detail {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.state {
+  flex: none;
+  color: var(--waiting);
+  font-size: 11px;
+}
+
+/* How long a conversation has been in its state, at the right end of its row, before the
+   archive button. Empty in its first minute. */
+.elapsed {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.elapsed:empty {
+  display: none;
+}
+
+.elapsed:not(:empty) + .gh {
+  margin-left: 0;
+}
+
+/* A row without the archive button (one that works or waits) keeps its place, so the times
+   stay in one column: the button's width and the row's gap. */
+.elapsed:last-child {
+  margin-right: 27px;
+}
+
+/* A narrow side bar cuts the owner before the repository's name, which the WSL tag
+   already shortens. */
+.row.repo > .detail {
+  flex: 0 1000 auto;
+}
+
+/* Where a repository's remote is, at the head of its row. */
+.icon.provider {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--icon);
+}
+
+/* The icon of a repository with pull requests of one's own approved and not merged, and the dot
+   on its corner: red, as the dot of a notice is, small and on the icon, where no state's dot is.
+   The icon has a hole around the dot, rather than the dot an edge in the side bar's color, which
+   would show on a row under the mouse or the icon's own ground. */
+.provider-box {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+
+.provider-box.approved > .provider {
+  mask-image: radial-gradient(circle at 12px 2px, transparent 4.5px, #000 5px);
+}
+
+.approved-dot {
+  position: absolute;
+  top: -1px;
+  left: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--error);
+  pointer-events: none;
+}
+
+/* The icon of a repository that may be on GitHub, which brings up its GitHub buttons (#gh-bar):
+   a larger target than the icon, in the icon's room. */
+.gh-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  margin: -4px;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.gh-mark:hover,
+.gh-mark.open {
+  background: var(--icon-hover);
+}
+
+.gh-mark:hover .provider,
+.gh-mark.open .provider {
+  color: var(--text);
+}
+
+/* A repository that is not public on GitHub: a lock, or a building for an internal one. Close to
+   the name, in the owner's color: it says something of the repository, not of its state. */
+.icon.visibility {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-left: -3px;
+  color: var(--text-muted);
+  stroke-width: 1.5;
+}
+
+/* A folder in WSL. */
+.tag {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--wsl-bg);
+  color: var(--wsl);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 15px;
+}
+
+/* The issue a worktree's branch was made for; it opens the issue. */
+.issue {
+  flex: none;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.issue:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* The pull request of a worktree's branch, in its state's color, with the result of its checks;
+   it opens the pull request. */
+.pull {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 3px 0 2px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--pull-open);
+  font: inherit;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.pull.draft {
+  color: var(--pull-draft);
+}
+
+.pull.merged {
+  color: var(--pull-merged);
+}
+
+.pull.closed {
+  color: var(--pull-closed);
+}
+
+.pull .icon {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.3;
+}
+
+.pull .checks,
+.head-checks .checks {
+  width: 11px;
+  height: 11px;
+  stroke-width: 1.8;
+}
+
+/* The checks of a worktree's HEAD, on a row without a pull request; it opens them. */
+.head-checks {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 3px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+}
+
+.head-checks:hover {
+  background: var(--icon-hover);
+}
+
+.checks.success {
+  color: var(--done);
+}
+
+.checks.failure {
+  color: var(--error);
+}
+
+.checks.pending {
+  color: var(--checks-pending);
+}
+
+.pull:hover {
+  background: var(--icon-hover);
+  text-decoration: underline;
+}
+
+/* The most urgent state among a collapsed repository's open tabs, next to the row's buttons. */
+.row.repo > .dot {
+  margin-left: auto;
+}
+
+.dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--idle);
+}
+
+.dot.closed {
+  width: 8px;
+  height: 8px;
+  margin: 0 1px;
+  background: transparent;
+  border: 1px solid var(--idle);
+}
+
+/* The glows are still shadows: only the transform and the opacity animate. */
+.dot.working,
+.dot.starting {
+  background: transparent;
+  border: 2px solid var(--working);
+  border-right-color: transparent;
+  animation: spin 0.9s linear infinite;
+}
+
+.dot.working {
+  box-shadow: var(--working-glow);
+}
+
+.dot.starting {
+  border-color: var(--idle);
+  border-right-color: transparent;
+}
+
+.dot.waiting {
+  background: var(--waiting);
+  box-shadow: var(--waiting-glow);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.dot.done {
+  background: var(--done);
+}
+
+.dot.error,
+.dot.stopped {
+  background: var(--error);
+}
+
+.dot.sleeping {
+  background: transparent;
+  border: 2px solid var(--idle);
+}
+
+.close {
+  flex: none;
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--icon);
+  font-size: 15px;
+  line-height: 1;
+  visibility: hidden;
+}
+
+.row:hover .close,
+.row.active .close {
+  visibility: visible;
+}
+
+.close:hover {
+  background: var(--icon-hover);
+  color: var(--text);
+}
+
+/* Buttons on the rows (shown on hover: close a repository's tabs, add a worktree, remove a
+   worktree, the branch's pull request, archive a conversation; removing one merged at its HEAD
+   always), and the GitHub buttons of a repository. */
+
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon .fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.gh,
+.icon-button {
+  flex: none;
+  border: 0;
+  border-radius: 4px;
+  padding: 0;
+  background: transparent;
+  color: var(--icon);
+}
+
+.gh,
+.icon-button {
+  display: grid;
+  place-items: center;
+}
+
+.gh {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  visibility: hidden;
+}
+
+.gh .icon {
+  width: 14px;
+  height: 14px;
+}
+
+.row:hover .gh,
+.gh.ready {
+  visibility: visible;
+}
+
+.row.repo > .dot + .gh,
+.gh + .gh,
+.gh + .close {
+  margin-left: 0;
+}
+
+/* Closing a repository's tabs, set apart from "+" after it. */
+.gh.close-all + .gh {
+  margin-left: 6px;
+}
+
+/* The GitHub buttons of a repository, over the rows under its icon (placeGithubBar in
+   sidebar.js), above the sections' headings. A ground of its own, lighter than the side bar's on
+   a dark theme and darker on a light one, an edge and a shadow, and a notch at the icon: the rows
+   it covers are not taken for its own. */
+#gh-bar {
+  --gh-bar-bg: color-mix(in srgb, var(--text) 10%, var(--bg));
+  --gh-bar-edge: color-mix(in srgb, var(--text) 30%, var(--bg));
+  position: fixed;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid var(--gh-bar-edge);
+  border-radius: 6px;
+  background: var(--gh-bar-bg);
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.32),
+    0 1px 3px rgba(0, 0, 0, 0.2);
+  animation: gh-bar-in 0.12s ease-out;
+}
+
+#gh-bar::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: var(--notch, 11px);
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--gh-bar-edge);
+  border-left: 1px solid var(--gh-bar-edge);
+  background: var(--gh-bar-bg);
+  transform: rotate(45deg);
+}
+
+/* Over the icon's row, when the window ends under it. */
+#gh-bar.above::before {
+  top: auto;
+  bottom: -5px;
+  transform: rotate(225deg);
+}
+
+#gh-bar .icon-button {
+  color: var(--text);
+}
+
+.gh-pages {
+  display: flex;
+  gap: 2px;
+}
+
+/* The pull requests approved and not merged, under the buttons (approvedRow in sidebar.js). */
+.gh-approved {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 2px 0 4px;
+  border-top: 1px solid var(--gh-bar-edge);
+  font-size: 11px;
+}
+
+.gh-approved-label {
+  margin-right: 2px;
+  color: var(--text-muted);
+}
+
+#gh-bar .icon-button:hover {
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+@keyframes gh-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #gh-bar {
+    animation: none;
+  }
+}
+
+.icon-button {
+  width: 24px;
+  height: 22px;
+}
+
+.gh:hover,
+.icon-button:hover {
+  background: var(--icon-hover);
+  color: var(--text);
+}
+
+/* Each provider uses the same compact columns; full times and status remain in the tooltip. */
+
+#usage {
+  flex: none;
+  padding: 5px 10px 7px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  max-height: 40vh;
+  overflow: auto;
+  container-type: inline-size;
+}
+
+.usage-provider + .usage-provider {
+  margin-top: 6px;
+}
+
+.usage-heading {
+  font-weight: 600;
+}
+
+.usage-bucket {
+  margin-top: 3px;
+}
+
+.usage-heading,
+.usage-bucket,
+.usage-status {
+  overflow-wrap: anywhere;
+}
+.usage-reset,
+.usage-status {
+  color: var(--text-muted);
+}
+
+.usage-row {
+  display: grid;
+  grid-template-columns: minmax(0, 4.5em) minmax(12px, 1fr) 3em minmax(0, 8.5em);
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+  white-space: nowrap;
+}
+
+.usage-label {
+  min-width: 0;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted);
+}
+
+.usage-bar {
+  min-width: 0;
+  height: 4px;
+  border-radius: 2px;
+  /* A track that shows on any theme's ground. */
+  background: color-mix(in srgb, var(--text) 16%, transparent);
+  overflow: hidden;
+}
+
+.usage-fill {
+  display: block;
+  height: 100%;
+  background: var(--usage);
+}
+
+.usage-percent {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-reset {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@container (max-width: 210px) {
+  .usage-row {
+    grid-template-columns: minmax(0, 3.8em) minmax(8px, 1fr) 2.8em minmax(0, 8.5em);
+    gap: 4px;
+    font-size: 10px;
+  }
+}
+
+.usage-row.warn .usage-fill,
+.usage-row.over .usage-fill {
+  background: var(--error);
+}
+
+.usage-row.over .usage-percent {
+  font-weight: 700;
+}
+
+.usage-row.warn .usage-percent,
+.usage-row.over .usage-percent {
+  color: var(--error);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Still dots, without their glow too: a glow that does not pulse only blurs the dot. */
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none !important;
+    box-shadow: none !important;
+  }
+
+  #refresh.spinning .icon {
+    animation: none;
+    opacity: 0.45;
+  }
+
+  .update-progress::before {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}

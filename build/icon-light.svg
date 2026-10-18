@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>Worktabs</title>
+  <desc>Three stacked editor windows in blue and violet on a pale lavender tile.</desc>
+  <rect x="48" y="48" width="928" height="928" rx="210" fill="#e6e7ed"/>
+  <g fill="#e6e7ed" stroke-width="56">
+    <rect x="396" y="238" width="456" height="332" rx="42" stroke="#5a3e8e"/>
+    <rect x="296" y="338" width="456" height="332" rx="42" stroke="#5a3e8e"/>
+    <rect x="196" y="438" width="456" height="332" rx="42" stroke="#2959aa"/>
+  </g>
+</svg>

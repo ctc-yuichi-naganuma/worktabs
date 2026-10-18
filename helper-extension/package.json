@@ -1,0 +1,60 @@
+{
+  "name": "worktabs-helper",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "publisher": "worktabs",
+  "version": "0.9.13",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/worktabs/worktabs.git",
+    "directory": "helper-extension"
+  },
+  "private": true,
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "worktabs.revealInExplorer",
+        "title": "%revealInExplorer%"
+      },
+      {
+        "command": "worktabs.revealInFinder",
+        "title": "%revealInFinder%"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "worktabs.revealInExplorer",
+          "when": "!isMac",
+          "group": "navigation@20"
+        },
+        {
+          "command": "worktabs.revealInFinder",
+          "when": "isMac",
+          "group": "navigation@20"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "worktabs.revealInExplorer",
+          "when": "false"
+        },
+        {
+          "command": "worktabs.revealInFinder",
+          "when": "false"
+        }
+      ]
+    }
+  }
+}

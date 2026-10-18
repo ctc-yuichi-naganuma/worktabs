@@ -1,0 +1,64 @@
+# git-cliff settings: builds CHANGELOG.md from the Conventional Commits prefixes (feat:, fix:,
+# ...) of the commits on main. The prefixes are the ones in .github/CONTRIBUTING.md.
+#
+# `npm version` runs it through scripts/changelog.js, and the release workflow takes the
+# release notes from CHANGELOG.md (scripts/release-notes.js), so the two never disagree.
+# Preview what is not released yet:  npm run changelog
+
+[changelog]
+header = """
+# Changelog
+
+Built with [git-cliff](https://git-cliff.org) from the prefixes of the commits ([Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)), not written by hand. \
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the versions follow [Semantic Versioning](https://semver.org/).\n
+"""
+# Groups are named "<!-- n -->name" to put them in this order; striptags drops the number.
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}\
+- {% if commit.breaking %}**Breaking change** {% endif %}{{ commit.message | split(pat="\n") | first | trim }}
+{% endfor %}\
+{% endfor %}\n
+"""
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+# Commits from before the prefixes were adopted go to Other instead of being dropped.
+filter_unconventional = false
+split_commits = false
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9]*"
+topo_order = false
+sort_commits = "newest"
+
+commit_preprocessors = [
+  # A squash merge ends the title with "(#12)": link it to the pull request.
+  { pattern = '\(#([0-9]+)\)', replace = "([#${1}](https://github.com/worktabs/worktabs/pull/${1}))" },
+]
+
+commit_parsers = [
+  # The commit `npm version` makes for a release (.npmrc).
+  { message = "^chore\\(release\\)", skip = true },
+  # A merge commit's own commits are listed one by one (.github/CONTRIBUTING.md).
+  { message = "^Merge (pull request|branch|remote-tracking)", skip = true },
+
+  { message = "^feat[(!:]", group = "<!-- 0 -->Features" },
+  { message = "^fix[(!:]", group = "<!-- 1 -->Bug fixes" },
+  { message = "^perf[(!:]", group = "<!-- 2 -->Performance" },
+  { message = "^refactor[(!:]", group = "<!-- 3 -->Refactoring" },
+  { message = "^docs[(!:]", group = "<!-- 4 -->Documentation" },
+  { message = "^test[(!:]", group = "<!-- 5 -->Tests" },
+  { message = "^build[(!:]", group = "<!-- 6 -->Build" },
+  { message = "^ci[(!:]", group = "<!-- 7 -->CI" },
+  { message = "^chore[(!:]", group = "<!-- 8 -->Chores" },
+  { message = ".*", group = "<!-- 9 -->Other" },
+]

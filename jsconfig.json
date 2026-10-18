@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "target": "es2023",
+    "lib": ["es2023"],
+    "types": ["node"],
+    "resolveJsonModule": true,
+    "maxNodeModuleJsDepth": 0,
+    "skipLibCheck": true,
+    "strict": false
+  },
+  "include": ["src/**/*.js"],
+  "exclude": ["src/sidebar/**", "src/dialog/**", "src/i18n/page.js"]
+}

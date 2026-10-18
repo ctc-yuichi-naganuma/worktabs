@@ -1,0 +1,148 @@
+name: Release
+
+# Pushing a v* tag (`npm version`, docs/releasing.md) builds the Windows installer and zip and the
+# macOS zip from that commit and publishes them, with their SHA-256, as a GitHub release.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  # Checks that fail in seconds, before either build starts.
+  prepare:
+    name: Check the tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      # The app reports package.json's version, so a tag that says otherwise would mislabel it.
+      - name: Check the tag against package.json
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::The tag $GITHUB_REF_NAME does not match the version in package.json ($version). Push the tag v$version."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      # The notes are the version's section of CHANGELOG.md as committed with the tag, not
+      # git-cliff run again here. Taken here only to fail early; the release job takes them again.
+      - name: Check the release notes in CHANGELOG.md
+        run: node scripts/release-notes.js "$GITHUB_REF_NAME" > /dev/null
+
+  # Each platform builds what it ships, with the tools only it has: csc.exe on Windows, the
+  # app bundle on macOS.
+  build:
+    name: Build (${{ matrix.name }})
+    needs: prepare
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            dist: npm run dist
+            files: |
+              dist/Worktabs-*-setup.exe
+              dist/Worktabs-*-win.zip
+          - name: macOS
+            os: macos-latest
+            dist: npm run dist:mac
+            files: dist/Worktabs-*-arm64-mac.zip
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      # No npm cache: what is released is built only from the registry and this commit.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: ${{ matrix.dist }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ matrix.os }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Release
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # create the release
+      id-token: write # sign the attestation
+      attestations: write
+    env:
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Take the release notes from CHANGELOG.md
+        run: node scripts/release-notes.js "$GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: dist-*
+          path: dist
+          merge-multiple: true
+
+      # Names without spaces: GitHub turns spaces in asset names into dots, and the names here
+      # must match the downloaded files for `sha256sum -c`.
+      - name: Write the checksums
+        working-directory: dist
+        run: |
+          sha256sum "Worktabs-$VERSION-setup.exe" "Worktabs-$VERSION-win.zip" "Worktabs-$VERSION-arm64-mac.zip" > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      # Attestations need a public repository (or GitHub Enterprise Cloud); until then this is skipped.
+      - uses: actions/attest-build-provenance@v4
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-checksums: dist/SHA256SUMS.txt
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DOCS: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.ref_name }}/docs/install.md
+        run: |
+          notes="$RUNNER_TEMP/notes.md"
+          cat >> "$notes" <<EOF
+
+          ### Downloads
+
+          | File | What it is |
+          |---|---|
+          | \`Worktabs-$VERSION-setup.exe\` | Windows installer. It installs per user, so it needs no administrator rights |
+          | \`Worktabs-$VERSION-win.zip\` | Windows, without installing. Extract it to any folder and run \`Worktabs.exe\` |
+          | \`Worktabs-$VERSION-arm64-mac.zip\` | macOS (Apple Silicon). Move the extracted \`Worktabs.app\` to Applications and start it |
+          | \`SHA256SUMS.txt\` | The SHA-256 of the three above |
+
+          They are not signed. On Windows, the first start shows a SmartScreen warning: click "More info", then "Run anyway". On macOS, run \`xattr -dr com.apple.quarantine /Applications/Worktabs.app\` before the first start. See [docs/install.md]($DOCS) for more.
+          EOF
+          prerelease=()
+          if [[ "$VERSION" == *-* ]]; then prerelease=(--prerelease); fi
+          # gh creates it as a draft until every file is uploaded, so a failed upload publishes nothing.
+          gh release create "$GITHUB_REF_NAME" --verify-tag "${prerelease[@]}" \
+            --title "Worktabs $VERSION" --notes-file "$notes" \
+            "dist/Worktabs-$VERSION-setup.exe" "dist/Worktabs-$VERSION-win.zip" \
+            "dist/Worktabs-$VERSION-arm64-mac.zip" dist/SHA256SUMS.txt

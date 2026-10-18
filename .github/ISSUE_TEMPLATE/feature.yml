@@ -1,0 +1,19 @@
+name: Feature request
+description: Something you would like Worktabs to do
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Write in English or Japanese.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What you are trying to do, and what gets in the way
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: How it could work, if you have an idea

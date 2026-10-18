@@ -1,0 +1,528 @@
+/* A dialog over the whole window, drawn as VS Code draws its own, in the colors of the VS Code
+   theme in the tab in front, which the app sends (theme.js) and the page sets on its root in
+   place of these. Until then, those of VS Code's default themes, light or dark as Windows is
+   (data-scheme, set by dialog.js). The page itself stays transparent: the window shows through
+   the dimmed backdrop. */
+:root {
+  --dialog-bg: #f8f8f8;
+  --dialog-text: #3b3b3b;
+  --dialog-border: #e5e5e5;
+  --dialog-shadow: rgba(0, 0, 0, 0.16);
+  --text-muted: #6f6f6f;
+  --accent: #005fb8;
+  --button-bg: #005fb8;
+  --button-text: #ffffff;
+  --button-hover: #0258a8;
+  --button-border: rgba(0, 0, 0, 0.1);
+  --button2-bg: #e5e5e5;
+  --button2-text: #3b3b3b;
+  --button2-hover: #cccccc;
+  --checkbox-bg: #f8f8f8;
+  --checkbox-text: #3b3b3b;
+  --checkbox-border: #cecece;
+  --input-bg: #ffffff;
+  --input-text: #3b3b3b;
+  --input-border: #cecece;
+  --placeholder: #767676;
+  --info-icon: #1a85ff;
+  --warning-icon: #bf8803;
+  --error-icon: #e51400;
+  --scrollbar: rgba(100, 100, 100, 0.4);
+}
+
+:root[data-scheme='dark'] {
+  --dialog-bg: #202020;
+  --dialog-text: #cccccc;
+  --dialog-border: #313131;
+  --dialog-shadow: rgba(0, 0, 0, 0.36);
+  --text-muted: #9d9d9d;
+  --accent: #0078d4;
+  --button-bg: #0078d4;
+  --button-hover: #026ec1;
+  --button-border: rgba(255, 255, 255, 0.07);
+  --button2-bg: #313131;
+  --button2-text: #cccccc;
+  --button2-hover: #3c3c3c;
+  --checkbox-bg: #313131;
+  --checkbox-text: #cccccc;
+  --checkbox-border: #3c3c3c;
+  --input-bg: #313131;
+  --input-text: #cccccc;
+  --input-border: #3c3c3c;
+  --placeholder: #989898;
+  --info-icon: #3794ff;
+  --warning-icon: #cca700;
+  --error-icon: #f14c4c;
+  --scrollbar: rgba(121, 121, 121, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+}
+
+body {
+  overflow: hidden;
+  font: 13px/1.4 "Segoe UI", "Yu Gothic UI", system-ui, sans-serif;
+  user-select: none;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.box {
+  display: flex;
+  flex-direction: column;
+  width: min-content;
+  min-width: min(440px, 100%);
+  max-width: min(90vw, 720px);
+  max-height: 90vh;
+  padding: 4px;
+  border: 1px solid var(--dialog-border);
+  border-radius: 8px;
+  background: var(--dialog-bg);
+  color: var(--dialog-text);
+  box-shadow:
+    0 0 8px var(--dialog-shadow),
+    0 0 20px rgba(0, 0, 0, 0.15);
+  color-scheme: light;
+}
+
+:root[data-scheme='dark'] .box {
+  color-scheme: dark;
+}
+
+/* High contrast themes: the outline only. */
+:root[data-contrast] .box {
+  box-shadow: none;
+}
+
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  min-height: 0;
+  padding: 16px 8px 0 12px;
+}
+
+.icon {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon .fill {
+  fill: currentColor;
+  stroke: none;
+}
+
+.info .icon,
+.question .icon {
+  color: var(--info-icon);
+}
+
+.warning .icon {
+  color: var(--warning-icon);
+}
+
+.error .icon {
+  color: var(--error-icon);
+}
+
+.text {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: 0 20px 0 8px;
+}
+
+.message {
+  flex: none;
+  display: flex;
+  align-items: center;
+  min-height: 22px;
+  margin: 2px 0 12px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  user-select: text;
+}
+
+/* A long path widens the dialog (up to its max-width) rather than breaking. Long enough (git's
+   errors), the text scrolls; it can be selected and copied. */
+.detail {
+  min-height: 0;
+  overflow-y: auto;
+  color: var(--text-muted);
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  user-select: text;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+.checkbox-row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 15px;
+}
+
+.checkbox {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+}
+
+.checkbox input {
+  appearance: none;
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid var(--checkbox-border);
+  border-radius: 3px;
+  background: var(--checkbox-bg);
+}
+
+.checkbox input:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.check {
+  position: absolute;
+  inset: 1px;
+  fill: none;
+  stroke: var(--checkbox-text);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.checkbox input:checked + .check {
+  visibility: visible;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  padding: 16px 0 0 64px;
+}
+
+.button {
+  margin: 4px;
+  padding: 4px 12px;
+  min-width: 64px;
+  border: 1px solid var(--button-border);
+  border-radius: 4px;
+  background: var(--button2-bg);
+  color: var(--button2-text);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.button:hover {
+  background: var(--button2-hover);
+}
+
+.button.primary {
+  background: var(--button-bg);
+  color: var(--button-text);
+}
+
+.button.primary:hover {
+  background: var(--button-hover);
+}
+
+.button:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.button:disabled {
+  opacity: 0.5;
+}
+
+/* The dialog that adds a worktree: two fields, each with a line under it that says what it will
+   do (or what went wrong). */
+.box.add {
+  width: min(560px, 100%);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 0;
+}
+
+.form .message {
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.repo {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-weight: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.label {
+  margin-top: 8px;
+  padding-bottom: 4px;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-row .button {
+  margin: 0;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.field {
+  min-width: 0;
+  height: 26px;
+  padding: 0 6px;
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  background: var(--input-bg);
+  color: var(--input-text);
+  font: inherit;
+  user-select: text;
+}
+
+.field::placeholder {
+  color: var(--placeholder);
+}
+
+.field:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.field:disabled {
+  opacity: 0.6;
+}
+
+.hint {
+  min-height: 20px;
+  padding-top: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.hint.error {
+  color: var(--error-icon);
+}
+
+/* A sweep while an action runs (.busy), such as packing an extension to import. Its space stays
+   when idle, so the table below does not move. It appears after a moment, so actions that finish
+   at once do not flash it. */
+.progress {
+  position: relative;
+  height: 2px;
+  margin: 2px 0 8px;
+  overflow: hidden;
+  border-radius: 1px;
+}
+
+.progress.busy {
+  background: rgb(from var(--accent) r g b / 0.2);
+  animation: progress-appear 0s 300ms both;
+}
+
+.progress.busy::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 35%;
+  background: var(--accent);
+  animation: progress-sweep 1400ms ease-in-out infinite;
+}
+
+@keyframes progress-appear {
+  from {
+    visibility: hidden;
+  }
+}
+
+@keyframes progress-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(290%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress.busy::before {
+    width: 100%;
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+.add .buttons,
+.clone .buttons {
+  padding-left: 0;
+}
+
+/* The dialog that asks where to clone: the folder, with a line under it that says where it goes
+   (or what is wrong), and the places where the listed repositories are, to pick from. */
+.box.clone {
+  width: min(640px, 100%);
+}
+
+.box.settings {
+  width: min(520px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.box.settings.extensions-open { width: min(900px, 100%); }
+.settings-tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+.settings-tabs [aria-selected='true'] { border-bottom: 2px solid var(--accent); }
+/* The General tab's labels and fields stack as in .form: the tab panel sits between them. */
+#settings-general { display: flex; flex-direction: column; }
+.extension-toolbar, .extension-update-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 10px 0; }
+.extension-toolbar .field { width: auto; flex: 1; min-width: 150px; }
+.extension-update-row > span { flex: 1; }
+.extension-table-wrap { overflow: auto; max-height: 240px; }
+.extension-table { border-collapse: collapse; width: 100%; font-size: 12px; table-layout: fixed; }
+.extension-table th, .extension-table td { padding: 6px; text-align: left; border-bottom: 1px solid var(--input-border); overflow-wrap: anywhere; }
+.extension-table th:first-child { width: 27%; }
+.extension-table th:last-child { width: 30%; }
+.extension-row-actions .button { margin: 2px; font-size: 12px; padding: 3px 6px; }
+.extension-candidates { max-height: 170px; overflow: auto; border-top: 1px solid var(--input-border); }
+.extension-candidate { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+.extension-candidate > span { overflow-wrap: anywhere; }
+.extension-version { color: var(--text-muted); }
+.extension-newer { color: var(--accent); }
+.extension-permission { font-size: 12px; margin: 10px 0; }
+@media (max-width: 540px) {
+  .extension-candidate { grid-template-columns: 18px minmax(0, 1fr); }
+  .extension-version { grid-column: 2; }
+  .extension-table th:last-child { width: 25%; }
+}
+
+.setting-group {
+  margin: 0 0 4px;
+  padding: 8px 10px 6px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+}
+
+.setting-group legend {
+  padding: 0 4px;
+  color: var(--text-muted);
+}
+
+.agent-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+}
+
+.note {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  user-select: text;
+}
+
+.choices {
+  min-height: 0;
+  max-height: 168px;
+  overflow-y: auto;
+  border: 1px solid var(--input-border);
+  border-radius: 2px;
+  scrollbar-color: var(--scrollbar) transparent;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 24px;
+  padding: 2px 6px;
+  border: 0;
+  background: transparent;
+  color: var(--dialog-text);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+}
+
+.choice:hover {
+  background: var(--button2-hover);
+}
+
+.choice[aria-pressed='true'] {
+  background: var(--button2-bg);
+}
+
+.choice:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.choice-path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.choice-count {
+  flex: none;
+  color: var(--text-muted);
+}

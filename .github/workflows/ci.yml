@@ -1,0 +1,94 @@
+name: CI
+
+# Changes to these documents alone run nothing: no test reads them, and none is packaged.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', 'README.md', 'README.ja.md', 'AGENTS.md', 'CLAUDE.md', 'CHANGELOG.md', '.github/CONTRIBUTING.md', '.github/CODE_OF_CONDUCT.md', '.github/SECURITY.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md']
+  pull_request:
+    paths-ignore: ['docs/**', 'README.md', 'README.ja.md', 'AGENTS.md', 'CLAUDE.md', 'CHANGELOG.md', '.github/CONTRIBUTING.md', '.github/CODE_OF_CONDUCT.md', '.github/SECURITY.md', '.github/ISSUE_TEMPLATE/**', '.github/pull_request_template.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its run still going. Pushes to main each keep their own
+# run (the group is the commit): the side bar shows each merge commit's CI on its pull request.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  # One job for each OS: GitHub bills each job by the minute, rounded up. macOS, whose minutes
+  # count ten times over, runs once a night instead (mac.yml).
+  test:
+    name: Test (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Ubuntu only for now: the month's Actions budget ran out (October 2026), and Windows
+        # minutes cost close to twice Ubuntu's. Put windows-latest back to test and pack on it
+        # again; the nightly macOS run is disabled meanwhile (gh workflow enable "CI (macOS)").
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    # Each takes a few minutes. Without this a test that never ends runs for GitHub's 6 hours,
+    # which macOS once did (3,600 minutes billed).
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      # Electron's binary, which npm ci downloads (its postinstall) unless this has it already.
+      - if: runner.os == 'Linux'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/electron
+          key: electron-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+      - run: npm ci
+      - run: npm run check
+      # Lint findings do not depend on the OS, so one runner is enough.
+      - if: runner.os == 'Linux'
+        run: npm run lint
+      - if: runner.os == 'Linux'
+        run: npm run typecheck
+      # Advisories in what the app ships fail the build; the development tools' are left to
+      # Dependabot (.github/dependabot.yml), as they never reach a user's machine.
+      - if: runner.os == 'Linux'
+        run: npm audit --omit=dev --audit-level=high
+      # On Ubuntu the tests run with coverage, and fail when it falls below package.json's
+      # thresholds. The other runners only run them: the per-OS branches move the numbers.
+      - if: runner.os == 'Linux'
+        run: npm run coverage
+      - if: runner.os != 'Linux'
+        run: npm test
+      # The whole app on Linux under Xvfb (scripts/smoke-check.js, docs/development.md). The Linux
+      # build of code-server it runs is kept by its version, which only an update changes.
+      - if: runner.os == 'Linux'
+        id: code-server
+        run: echo "version=$(node -p "require('./src/config').DEFAULTS.codeServerVersion")" >> "$GITHUB_OUTPUT"
+      - if: runner.os == 'Linux'
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/worktabs-smoke
+          key: code-server-${{ runner.os }}-${{ runner.arch }}-${{ steps.code-server.outputs.version }}
+      - if: runner.os == 'Linux'
+        run: |
+          command -v xvfb-run || (sudo apt-get update && sudo apt-get install -y xvfb)
+          node node_modules/electron/install.js
+          npm run smoke -- --work "$RUNNER_TEMP/worktabs-smoke"
+      - if: failure() && runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-logs
+          path: |
+            ${{ runner.temp }}/worktabs-smoke/app.log
+            ${{ runner.temp }}/worktabs-smoke/data/logs/
+          if-no-files-found: ignore
+      # The app ships for Windows and macOS. Windows builds claude-wrap.exe and the helper VSIX
+      # with the tools it has, then the unpacked app, as `npm run pack` does on a developer's
+      # machine. macOS builds in mac.yml.
+      - if: runner.os == 'Windows'
+        run: npm run pack

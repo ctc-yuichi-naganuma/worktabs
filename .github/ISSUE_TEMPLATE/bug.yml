@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Write in English or Japanese.
+        Do not report a security problem here: report it as described in [SECURITY.md](https://github.com/worktabs/worktabs/blob/main/.github/SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you expected, and what happened instead
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: From the name of the installer or zip, or the commit when running from source
+      placeholder: Worktabs-0.3.1-setup.exe
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      multiple: true
+      options:
+        - Windows
+        - macOS
+        - WSL
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant parts of the files in `logs` in the data folder ([docs/config.md](https://github.com/worktabs/worktabs/blob/main/docs/config.md)). Remove paths, repository names, and anything else you do not want to share.
+      render: text

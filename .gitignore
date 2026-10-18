@@ -1,0 +1,15 @@
+# Dependencies and downloaded binaries
+node_modules/
+
+# Build outputs (native/claude-wrap.exe and the helper VSIX are built with `npm run build:native`)
+*.exe
+*.vsix
+
+# Machine-specific settings (copy config.example.json)
+/config.local.json
+
+# Logs
+*.log
+
+# Packaged app and installer (npm run dist)
+/dist/

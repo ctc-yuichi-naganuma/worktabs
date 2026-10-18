@@ -1,0 +1,141 @@
+{
+  "name": "worktabs",
+  "productName": "Worktabs",
+  "version": "0.4.0",
+  "private": true,
+  "description": "One window for your Claude Code and Codex conversations, one tab per git worktree",
+  "license": "MIT",
+  "author": "Worktabs contributors",
+  "homepage": "https://github.com/worktabs/worktabs#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/worktabs/worktabs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/worktabs/worktabs/issues"
+  },
+  "main": "src/main.js",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test \"test/**/*.test.js\"",
+    "coverage": "node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-coverage-include=\"helper-extension/**\" --test-coverage-lines=91 --test-coverage-branches=90 --test-coverage-functions=81 \"test/**/*.test.js\"",
+    "check": "node scripts/check-syntax.js",
+    "lint": "eslint .",
+    "typecheck": "tsc -p jsconfig.json && tsc -p src/sidebar/jsconfig.json && tsc -p src/dialog/jsconfig.json",
+    "smoke": "node scripts/smoke-check.js",
+    "build:native": "node scripts/build-native.js",
+    "build:icons": "node scripts/build-icons.js",
+    "pack": "npm run build:native && electron-builder --win --x64 --dir",
+    "try": "node scripts/try.js",
+    "dist": "npm run pack && npm run dist:packed",
+    "dist:packed": "electron-builder --win --x64 --prepackaged dist/win-unpacked --publish never",
+    "pack:mac": "npm run build:native && electron-builder --mac --dir",
+    "dist:mac": "npm run build:native && electron-builder --mac --publish never",
+    "changelog": "git-cliff --unreleased",
+    "translations": "node scripts/translations.js",
+    "version": "node scripts/changelog.js"
+  },
+  "build": {
+    "appId": "io.github.worktabs.worktabs",
+    "productName": "Worktabs",
+    "electronFuses": {
+      "runAsNode": true,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false
+    },
+    "files": [
+      "src/**/*",
+      "!src/**/jsconfig.json",
+      "!src/**/*.d.ts",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "extraResources": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        {
+          "from": "native/claude-wrap.exe",
+          "to": "native/claude-wrap.exe"
+        },
+        {
+          "from": "native/codex-wrap.exe",
+          "to": "native/codex-wrap.exe"
+        },
+        {
+          "from": "native",
+          "to": "native",
+          "filter": [
+            "*.vsix"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "artifactName": "${productName}-${version}-setup.${ext}",
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "icon": "build/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "identity": "-",
+      "artifactName": "${productName}-${version}-${arch}-mac.${ext}",
+      "extraResources": [
+        "LICENSE",
+        "THIRD_PARTY_NOTICES.md",
+        {
+          "from": "native",
+          "to": "native",
+          "filter": [
+            "*.vsix"
+          ]
+        }
+      ],
+      "target": [
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@resvg/resvg-js": "2.6.2",
+    "@types/node": "^22.20.5",
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.12.0",
+    "git-cliff": "^2.14.2",
+    "globals": "^17.13.0",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "fast-xml-parser": "^5.11.2",
+    "semver": "^7.8.5"
+  }
+}

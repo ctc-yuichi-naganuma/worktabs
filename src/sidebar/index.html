@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'" />
+    <title>sidebar</title>
+    <link rel="stylesheet" href="sidebar.css" />
+  </head>
+  <body>
+    <header>
+      <span class="title">Worktabs</span>
+      <span id="summary" aria-live="polite"></span>
+      <div class="actions" role="toolbar" data-i18n-aria-label="Sidebar actions">
+        <button id="refresh" class="icon-button" type="button" data-i18n-title="Refresh the repository list" data-i18n-aria-label="Refresh the repository list"></button>
+        <button id="add" class="icon-button" type="button" data-i18n-title="Add a repository or open a folder" data-i18n-aria-label="Add a repository or open a folder"></button>
+        <button id="settings" class="icon-button" type="button" data-i18n-title="Settings" data-i18n-aria-label="Settings"></button>
+        <button id="more" class="icon-button" type="button" data-i18n-title="More actions" data-i18n-aria-label="More actions"></button>
+      </div>
+    </header>
+    <section id="update" class="update" hidden aria-live="polite" data-i18n-aria-label="code-server and extension updates"></section>
+    <div class="filter">
+      <input id="filter" type="search" data-i18n-placeholder="Filter" data-i18n-aria-label="Filter repositories, worktrees, and conversations" autocomplete="off" />
+    </div>
+    <main id="repos">
+      <section id="open-section">
+        <h2 id="open-head" class="section-head">
+          <button id="open-toggle" class="section-label" type="button" aria-expanded="true" aria-controls="open-tree">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.25 8 9.75l3.5-3.5" /></svg><span data-i18n="Open repositories"></span><span id="open-count" class="count"></span><span id="open-dot" class="dot" hidden></span>
+          </button>
+        </h2>
+        <div id="open-tree" role="tree" aria-labelledby="open-head"></div>
+      </section>
+      <section id="other-section">
+        <h2 id="other-head" class="section-head">
+          <button id="other-toggle" class="section-label" type="button" aria-expanded="true" aria-controls="other-tree">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.25 8 9.75l3.5-3.5" /></svg><span data-i18n="Other repositories"></span><span id="other-count" class="count"></span>
+          </button>
+        </h2>
+        <div id="other-tree" role="tree" aria-labelledby="other-head"></div>
+      </section>
+      <section id="uncloned-section" hidden>
+        <h2 id="uncloned-head" class="section-head">
+          <button id="uncloned-toggle" class="section-label" type="button" aria-expanded="false" aria-controls="uncloned-tree">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6.25 8 9.75l3.5-3.5" /></svg><span data-i18n="Repositories not cloned"></span><span id="uncloned-count" class="count"></span>
+          </button>
+        </h2>
+        <div id="uncloned-tree" role="tree" aria-labelledby="uncloned-head"></div>
+      </section>
+    </main>
+    <div id="gh-bar" role="toolbar" hidden></div>
+    <footer id="usage" hidden data-i18n-aria-label="Subscription usage"></footer>
+    <div id="edge" class="edge" role="separator" aria-orientation="vertical" data-i18n-aria-label="Sidebar width" data-i18n-title="Drag to change the width; double-click for the default width"></div>
+    <script src="../i18n/translate.js"></script>
+    <script src="../i18n/page.js"></script>
+    <script src="time.js"></script>
+    <script src="checks.js"></script>
+    <script src="press.js"></script>
+    <script src="hover.js"></script>
+    <script src="model.js"></script>
+    <script src="data.js"></script>
+    <script src="icons.js"></script>
+    <script src="pulls.js"></script>
+    <script src="rows.js"></script>
+    <script src="uncloned.js"></script>
+    <script src="github-bar.js"></script>
+    <script src="update-card.js"></script>
+    <script src="usage-footer.js"></script>
+    <script src="resize.js"></script>
+    <script src="page-theme.js"></script>
+    <script src="sidebar.js"></script>
+  </body>
+</html>

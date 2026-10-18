@@ -1,0 +1,23 @@
+{
+  "extends": "../../jsconfig.json",
+  "compilerOptions": {
+    "lib": ["es2023", "dom", "dom.iterable"],
+    // A jsconfig.json defaults this to 2 over what it extends, which would check the JavaScript
+    // packages @types/node imports (punycode, string_decoder).
+    "maxNodeModuleJsDepth": 0
+  },
+  // The scripts index.html loads, in its order: they share one global scope.
+  "include": [
+    "globals.d.ts",
+    "../i18n/translate.js",
+    "../i18n/page.js",
+    "keys.js",
+    "add-worktree.js",
+    "clone.js",
+    "settings-choice.js",
+    "extensions.js",
+    "settings.js",
+    "dialog.js"
+  ],
+  "exclude": []
+}

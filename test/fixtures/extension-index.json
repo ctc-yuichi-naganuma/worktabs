@@ -1,0 +1,9 @@
+[
+  { "identifier": { "id": "OpenAI.ChatGPT" }, "version": "1.0.0", "relativeLocation": "codex-current", "metadata": { "targetPlatform": "win32-x64" } },
+  { "identifier": { "id": "Anthropic.claude-code" }, "version": "2.0.0", "relativeLocation": "claude-current", "metadata": { "targetPlatform": "darwin-universal" } },
+  { "identifier": { "id": "Acme.Universal" }, "version": "3.0.0", "relativeLocation": "universal" },
+  { "identifier": { "id": "Acme.Legacy" }, "version": "4.0.0", "relativeLocation": "legacy", "metadata": { "targetPlatform": "undefined" } },
+  { "identifier": { "id": "Acme.Escaping" }, "version": "1.0.0", "relativeLocation": "../outside" },
+  { "identifier": { "id": 123 }, "version": "1.0.0" },
+  null
+]

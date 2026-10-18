@@ -1,0 +1,5 @@
+# Keep LF in the working tree: shell scripts break with CRLF, and every tool here reads LF.
+* text=auto eol=lf
+*.png binary
+# Except batch files: cmd.exe misreads them with LF line endings (labels, long lines).
+*.cmd text eol=crlf

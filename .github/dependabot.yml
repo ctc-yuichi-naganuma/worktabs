@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # Minor and patch updates come as one pull request a week, to keep the CI minutes and the
+  # reviews down. A major update (Electron's above all) comes on its own: it needs a look at
+  # its release notes and a run on Windows and macOS before it is merged.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-minor:
+        update-types: [minor, patch]
+    ignore:
+      # The Node types follow the Node version in .nvmrc, not the latest Node: newer types would
+      # let the code use APIs that Node 22 does not have. Move them with .nvmrc by hand.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: build
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: ci

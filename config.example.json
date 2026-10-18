@@ -1,0 +1,16 @@
+{
+  "repos": ["C:/path/to/your/repo"],
+  "repoSources": ["ghq", "wsl"],
+  "unclonedRepos": true,
+  "hiddenGithubOwners": [],
+  "codeServerDir": "",
+  "extensionsDir": "",
+  "agents": ["claude"],
+  "defaultAgent": "claude",
+  "branchAgent": "claude",
+  "locale": "",
+  "permissionMode": "auto",
+  "codexApprovalMode": "auto-review",
+  "pasteFallback": false,
+  "idleSuspendMinutes": 0
+}

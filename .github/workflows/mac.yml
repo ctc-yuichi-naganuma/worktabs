@@ -1,0 +1,57 @@
+name: CI (macOS)
+
+# macOS minutes count ten times over, and each job is billed by the minute rounded up, so a run
+# of 20 seconds costs 10. So macOS runs once a night, when main's head has not been tested on it
+# yet, rather than on each push; and by hand on a branch: gh workflow run mac.yml --ref <branch>.
+# The release tests and builds on macOS again before anything ships (release.yml).
+on:
+  schedule:
+    - cron: '17 18 * * *' # 03:17 in Japan; off the hour, when GitHub delays scheduled runs most
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # A minute on Ubuntu, to spend ten on macOS only when there is something new to test.
+  untested:
+    name: Look for an untested commit
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      checks: read
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      # A finished macOS test of main's head, from an earlier night or run by hand, leaves nothing
+      # to test. All of them, not the latest only: the latest is the skipped one of a quiet night.
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tested=$(gh api -X GET "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/check-runs" \
+            -f check_name='Test (macos-latest)' -f filter=all \
+            --jq '[.check_runs[] | select(.conclusion == "success" or .conclusion == "failure")] | length')
+          echo "Finished macOS tests of $GITHUB_SHA: $tested"
+          if [ "$tested" = 0 ]; then echo run=true; else echo run=false; fi >> "$GITHUB_OUTPUT"
+
+  # The same as ci.yml's test, then the app bundle, as `npm run pack:mac` does on a Mac.
+  test:
+    name: Test (macos-latest)
+    needs: untested
+    # Run by hand, the job above is skipped; !cancelled() keeps that from skipping this one too.
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.untested.outputs.run == 'true') }}
+    runs-on: macos-latest
+    # It takes under a minute. A test that never ends would otherwise run for GitHub's 6 hours.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run pack:mac

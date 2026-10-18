@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; script-src 'self'" />
+    <title>dialog</title>
+    <link rel="stylesheet" href="dialog.css" />
+  </head>
+  <body>
+    <div id="backdrop" class="backdrop" hidden>
+      <div id="box" class="box" role="alertdialog" aria-modal="true" aria-labelledby="message" aria-describedby="detail">
+        <div class="message-row">
+          <svg id="icon" class="icon" viewBox="0 0 16 16" aria-hidden="true"></svg>
+          <div class="text">
+            <div id="message" class="message"></div>
+            <div id="detail" class="detail"></div>
+            <label id="checkbox-row" class="checkbox-row">
+              <span class="checkbox">
+                <input id="checkbox" type="checkbox" />
+                <svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.75" /></svg>
+              </span>
+              <span id="checkbox-label"></span>
+            </label>
+          </div>
+        </div>
+        <div id="buttons" class="buttons"></div>
+      </div>
+      <div id="add" class="box add" role="dialog" aria-modal="true" aria-labelledby="add-title" hidden>
+        <div class="form">
+          <div class="message">
+            <span id="add-title" data-i18n="Add worktree"></span>
+            <span id="add-repo" class="repo"></span>
+          </div>
+          <label id="add-task-label" class="label" for="add-task"></label>
+          <div class="field-row">
+            <input id="add-task" class="field" type="text" autocomplete="off" spellcheck="false" />
+            <button id="add-suggest" class="button" type="button" data-i18n="Suggest a branch name"></button>
+          </div>
+          <div id="add-task-hint" class="hint" aria-live="polite"></div>
+          <label class="label" for="add-branch" data-i18n="Branch name"></label>
+          <input id="add-branch" class="field" type="text" autocomplete="off" spellcheck="false" placeholder="feat/x" />
+          <div id="add-branch-hint" class="hint" aria-live="polite"></div>
+        </div>
+        <div class="buttons">
+          <button id="add-create" class="button primary" type="button" data-i18n="Create"></button>
+          <button id="add-cancel" class="button" type="button" data-i18n="Cancel"></button>
+        </div>
+      </div>
+      <div id="clone" class="box clone" role="dialog" aria-modal="true" aria-labelledby="clone-title" hidden>
+        <div class="form">
+          <div class="message">
+            <span id="clone-title" data-i18n="Clone"></span>
+            <span id="clone-repo" class="repo"></span>
+          </div>
+          <div id="clone-note" class="note"></div>
+          <label class="label" for="clone-dest" data-i18n="Folder to clone into"></label>
+          <div class="field-row">
+            <input id="clone-dest" class="field" type="text" autocomplete="off" spellcheck="false" />
+            <button id="clone-browse" class="button" type="button" data-i18n="Browse…"></button>
+          </div>
+          <div id="clone-hint" class="hint" aria-live="polite"></div>
+          <div id="clone-choices-label" class="label" data-i18n="Or pick where cloned repositories are"></div>
+          <div id="clone-choices" class="choices"></div>
+        </div>
+        <div class="buttons">
+          <button id="clone-start" class="button primary" type="button" data-i18n="Clone"></button>
+          <button id="clone-cancel" class="button" type="button" data-i18n="Cancel"></button>
+        </div>
+      </div>
+      <div id="settings" class="box settings" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+        <div class="form">
+          <div class="message" id="settings-title" data-i18n="Settings"></div>
+          <div class="settings-tabs" role="tablist" data-i18n-aria-label="Settings sections">
+            <button id="settings-general-tab" class="button" role="tab" aria-selected="true" aria-controls="settings-general" data-i18n="General"></button>
+            <button id="settings-extensions-tab" class="button" role="tab" aria-selected="false" aria-controls="settings-extensions" data-i18n="Extensions"></button>
+          </div>
+          <div id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
+          <fieldset class="setting-group">
+            <legend data-i18n="Agents to use"></legend>
+            <label class="agent-row">
+              <span class="checkbox">
+                <input type="checkbox" name="settings-agents" value="claude" />
+                <svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.75" /></svg>
+              </span>
+              <span>Claude Code</span>
+            </label>
+            <label class="agent-row">
+              <span class="checkbox">
+                <input type="checkbox" name="settings-agents" value="codex" />
+                <svg class="check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.75" /></svg>
+              </span>
+              <span>Codex</span>
+            </label>
+          </fieldset>
+          <label class="label" for="settings-default-agent" data-i18n="Default agent for new tabs"></label>
+          <select id="settings-default-agent" class="field"></select>
+          <label class="label" for="settings-branch-agent" data-i18n="Agent for branch name suggestions"></label>
+          <select id="settings-branch-agent" class="field"></select>
+          <label class="label" for="settings-codex-approval" data-i18n="Codex approval for new conversations"></label>
+          <select id="settings-codex-approval" class="field">
+            <option value="auto-review" data-i18n="Approve for me when available"></option>
+            <option value="manual" data-i18n="Ask for approval"></option>
+          </select>
+          <div class="hint" data-i18n="Codex keeps manual approval when automatic review is unavailable."></div>
+          <div class="hint" data-i18n="Existing conversations keep their selected mode."></div>
+          </div>
+          <div id="settings-extensions" role="tabpanel" aria-labelledby="settings-extensions-tab" hidden>
+            <div class="extension-toolbar">
+              <select id="extension-target" class="field" data-i18n-aria-label="Extension target"></select>
+              <button id="extension-refresh" class="button" type="button" data-i18n="Refresh"></button>
+              <button id="extension-open-code" class="button" type="button" data-i18n="Open VS Code"></button>
+            </div>
+            <div class="extension-update-row">
+              <span id="extension-code-server"></span>
+              <button id="extension-check" class="button" type="button" data-i18n="Check for updates"></button>
+              <button id="extension-update" class="button primary" type="button" data-i18n="Apply updates" hidden></button>
+            </div>
+            <div id="extension-status" class="hint" role="status" aria-live="polite"></div>
+            <div id="extension-progress" class="progress" role="progressbar" data-i18n-aria-label="In progress" aria-hidden="true"></div>
+            <div class="extension-table-wrap">
+              <table class="extension-table">
+                <thead><tr><th data-i18n="Extension"></th><th data-i18n="Source"></th><th data-i18n="Version"></th><th data-i18n="Actions"></th></tr></thead>
+                <tbody id="extension-installed"></tbody>
+              </table>
+            </div>
+            <div class="extension-toolbar">
+              <span class="label" data-i18n="Available imports"></span>
+              <button id="extension-browse" class="button" type="button" data-i18n="Select a VS Code folder"></button>
+              <button id="extension-vsix" class="button" type="button" data-i18n="Select VSIX files"></button>
+            </div>
+            <div id="extension-candidates" class="extension-candidates"></div>
+            <label class="agent-row extension-permission">
+              <input id="extension-permission" type="checkbox" />
+              <span data-i18n="I have permission to use the selected extensions in code-server."></span>
+            </label>
+            <button id="extension-import" class="button primary" type="button" data-i18n="Import selected" disabled></button>
+          </div>
+        </div>
+        <div class="buttons">
+          <button id="settings-save" class="button primary" type="button" data-i18n="Save"></button>
+          <button id="settings-cancel" class="button" type="button" data-i18n="Cancel"></button>
+        </div>
+      </div>
+    </div>
+    <script src="../i18n/translate.js"></script>
+    <script src="../i18n/page.js"></script>
+    <script src="keys.js"></script>
+    <script src="add-worktree.js"></script>
+    <script src="clone.js"></script>
+    <script src="settings-choice.js"></script>
+    <script src="extensions.js"></script>
+    <script src="settings.js"></script>
+    <script src="dialog.js"></script>
+  </body>
+</html>

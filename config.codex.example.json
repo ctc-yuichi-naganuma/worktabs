@@ -1,0 +1,10 @@
+{
+  "repos": [],
+  "repoSources": ["ghq", "wsl"],
+  "agents": ["codex"],
+  "defaultAgent": "codex",
+  "branchAgent": "codex",
+  "codexApprovalMode": "manual",
+  "locale": "",
+  "idleSuspendMinutes": 0
+}
